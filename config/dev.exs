@@ -2,7 +2,8 @@ import Config
 
 # Configure your database
 config :append, Append.Repo,
-  username: "postgres",
+  migration_timestamps: [type: :naive_datetime_usec],
+  username: "append_only",
   password: "postgres",
   hostname: "localhost",
   database: "append_dev",
