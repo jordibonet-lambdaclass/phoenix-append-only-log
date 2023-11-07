@@ -2,6 +2,8 @@ defmodule Append.Address do
   use Ecto.Schema
   import Ecto.Changeset
 
+  use Append.AppendOnlyLog #include the functions from this module's '__using__' macro.
+
   @timestamps_opts [type: :naive_datetime_usec]
   schema "addresses" do
     field :name, :string

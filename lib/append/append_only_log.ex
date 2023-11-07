@@ -10,8 +10,16 @@ defmodule Append.AppendOnlyLog do
   defmacro __using__(_opts) do
     quote do
       @behaviour Append.AppendOnlyLog
+      @before_compile unquote(__MODULE__)
+    end
+  end
 
+  defmacro __before_compile__(_env) do
+    quote do
       def insert(attrs) do
+        %__MODULE__{}
+        |> __MODULE__.changeset(attrs)
+        |> Repo.insert()
       end
 
       def get(id) do
