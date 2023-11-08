@@ -1,12 +1,17 @@
 defmodule Append.AppendOnlyLog do
   alias Append.Repo
 
+  @moduledoc """
+  Behaviour that defines functions for accessing and inserting data in an
+  Append-Only database
+  """
+
   @callback insert(struct) :: {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
   @callback get(integer) :: Ecto.Schema.t() | nil | no_return()
   @callback all() :: [Ecto.Schema.t()]
   @callback update(Ecto.Schema.t(), struct) :: {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
-  @callback delete(Ecto.Schema.t()) :: {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
   @callback get_history(Ecto.Schema.t()) :: [Ecto.Schema.t()] | no_return()
+  @callback delete(Ecto.Schema.t()) :: {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
 
   defmacro __using__(_opts) do
     quote do
@@ -26,7 +31,7 @@ defmodule Append.AppendOnlyLog do
       end
 
       def get(entry_id) do
-        query =
+        sub =
           from(
             m in __MODULE__,
             where: m.entry_id == ^entry_id,
@@ -34,18 +39,18 @@ defmodule Append.AppendOnlyLog do
             limit: 1,
             select: m
           )
-
+        query = from(m in subquery(sub), where: not m.deleted, select: m)
         Repo.one(query)
       end
 
       def all do
-        query =
+        sub =
           from(m in __MODULE__,
             distinct: m.entry_id,
             order_by: [desc: :inserted_at],
             select: m
           )
-
+        query = from(m in subquery(sub), where: not m.deleted, select: m)
         Repo.all(query)
       end
 
@@ -64,6 +69,15 @@ defmodule Append.AppendOnlyLog do
         select: m
 
         Repo.all(query)
+      end
+
+      def delete(%__MODULE__{} = item) do
+        item
+        |> Map.put(:id, nil)
+        |> Map.put(:inserted_at, nil)
+        |> Map.put(:updated_at, nil)
+        |> __MODULE__.changeset(%{deleted: true})
+        |> Repo.insert()
       end
     end
   end
