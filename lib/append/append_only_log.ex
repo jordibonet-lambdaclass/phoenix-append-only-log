@@ -16,18 +16,36 @@ defmodule Append.AppendOnlyLog do
 
   defmacro __before_compile__(_env) do
     quote do
+      import Ecto.Query
+
       def insert(attrs) do
         %__MODULE__{}
         |> __MODULE__.changeset(attrs)
         |> Repo.insert()
       end
 
-      def get(id) do
-        Repo.get(__MODULE__, id)
+      def get(entry_id) do
+        query =
+          from(
+            m in __MODULE__,
+            where: m.entry_id == ^entry_id,
+            order_by: [desc: :inserted_at],
+            limit: 1,
+            select: m
+          )
+
+        Repo.one(query)
       end
 
-      def all() do
-        Repo.all(__MODULE__)
+      def all do
+        query =
+          from(m in __MODULE__,
+            distinct: m.entry_id,
+            order_by: [desc: :inserted_at],
+            select: m
+          )
+
+        Repo.all(query)
       end
 
       def update(%__MODULE__{} = item, attrs) do
