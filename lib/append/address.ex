@@ -12,14 +12,22 @@ defmodule Append.Address do
     field :city, :string
     field :postcode, :string
     field :tel, :string
-
+    field(:entry_id, :string)
     timestamps(type: :utc_datetime)
   end
 
   @doc false
   def changeset(address, attrs) do
     address
-    |> cast(attrs, [:name, :address_line_1, :address_line_2, :city, :postcode, :tel])
-    |> validate_required([:name, :address_line_1, :address_line_2, :city, :postcode, :tel])
+    |> insert_entry_id()
+    |> cast(attrs, [:name, :address_line_1, :address_line_2, :city, :postcode, :tel, :entry_id])
+    |> validate_required([:name, :address_line_1, :address_line_2, :city, :postcode, :tel, :entry_id])
+  end
+
+  def insert_entry_id(address) do
+    case Map.fetch(address, :entry_id) do
+      {:ok, nil} -> %{address | entry_id: Ecto.UUID.generate()}
+      _ -> address
+    end
   end
 end

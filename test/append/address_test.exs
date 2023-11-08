@@ -30,6 +30,13 @@ defmodule Append.AddressTest do
     end
   end
 
+  test "update item in database" do
+    {:ok, item} = insert_address()
+    {:ok, updated_item} = Address.update(item, %{tel: "0123444444"})
+    assert updated_item.name == item.name
+    assert updated_item.tel != item.tel
+  end
+
   def insert_address(name \\ "Thor") do
     Address.insert(%{
       name: name,

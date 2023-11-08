@@ -30,7 +30,13 @@ defmodule Append.AppendOnlyLog do
         Repo.all(__MODULE__)
       end
 
-      def update(item, attrs) do
+      def update(%__MODULE__{} = item, attrs) do
+        item
+        |> Map.put(:id, nil)
+        |> Map.put(:inserted_at, nil)
+        |> Map.put(:updated_at, nil)
+        |> __MODULE__.changeset(attrs)
+        |> Repo.insert()
       end
     end
   end
